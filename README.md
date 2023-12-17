@@ -1,0 +1,2 @@
+# MeepleSim
+Life simulator
