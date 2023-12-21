@@ -6,6 +6,6 @@ using UnityEngine;
 public class Interaction : ScriptableObject
 {
     public string ID = "nothing";
-    public AnimationClip animationToPlay;
+    public string animationToPlay = "interact";
     public float hunger,sleep,social,fun,hygiene,bathroom = 0;
 }

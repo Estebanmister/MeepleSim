@@ -9,6 +9,9 @@ public class Furniture : MonoBehaviour
     // ID is used as the display name
     public string ID = "none";
 
+    // Where the meeple will stand while performing the interaction animation
+    public Transform interactionPoint;
+
     // DO NOT change these directly, the scripts assigns them according to what interactions are available
     [HideInInspector]
     public float hunger,sleep,social,fun,hygiene,bathroom = 0;
