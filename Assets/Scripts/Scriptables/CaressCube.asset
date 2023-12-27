@@ -12,7 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 524b786e0983e4640acac694013af5f9, type: 3}
   m_Name: CaressCube
   m_EditorClassIdentifier: 
-  ID: nothing
+  ID: basic
+  description: Caress cube
   animationToPlay: interact
   hunger: 0
   sleep: 0
@@ -20,3 +21,10 @@ MonoBehaviour:
   fun: 0
   hygiene: 0
   bathroom: 100
+  interactionLength: 2
+  skillCheck: 0
+  skillsToCheck: []
+  requiredLevels: 
+  skillIncrease: 0
+  skillsToChange: []
+  skillLevelstoChange: 

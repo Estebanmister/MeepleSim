@@ -3,10 +3,14 @@ using System.Collections.Generic;
 using UnityEngine;
 
 
-
-
 public class City : MonoBehaviour
 {
+    // never resets;
+    public int weeks;
+    // resets after 7 days
+    public float globalTime;
+    // resets after 24 hours
+    public float clockTime;
     public Meeple[] meeples;
     public GameObject meeplePrefab;
 
@@ -15,10 +19,14 @@ public class City : MonoBehaviour
     Household[] households;
     void Start()
     {
-        meeples = new Meeple[2];
-        for(int i = 0; i < 2; i += 1){
-            GameObject newmeeple = Instantiate(meeplePrefab);
-            meeples[i] = newmeeple.GetComponent<Meeple>();
+    }
+
+    void Update(){
+        globalTime += Time.deltaTime;
+        // after 7 days
+        if(globalTime > 604800){
+            globalTime = 0;
+            weeks += 1;
         }
     }
 
