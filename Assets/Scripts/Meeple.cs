@@ -29,9 +29,9 @@ public class Relation {
 public class MeepleSim {
     // All data a meeple has
     public string type = "worker";
-    public float hunger,sleep,social,fun,hygiene,bathroom = 100.0f;
+    public float hunger,sleep,social,fun,hygiene,bathroom = 1.0f;
     public AnimationCurve[] needsCurves = new AnimationCurve[6];
-    public float morale = 100.0f;
+    public float morale = 1.0f;
     public Vector3 position;
     public Household household;
     public Job job;
@@ -46,6 +46,15 @@ public class Meeple : MonoBehaviour
     Animator animator;
     public bool observed = false;
     public Place place;
+
+    // thoughts for needs
+    // basically, thoughts that are made when the meeple is hungry, sleepy, etc
+    public Thought[] baseThoughtCollection = new Thought[6];
+
+    // thoughts felt by the meeple
+    // todo: if slow, change to array
+    public List<ActiveThought> thoughts = new List<ActiveThought>();
+
     NavMeshAgent agent;
     City city;
 
@@ -55,6 +64,10 @@ public class Meeple : MonoBehaviour
     public Action currentlyPerforming = null;
 
     List<Skill> skills = new List<Skill>();
+
+    float base_speed = 3.5f;
+    float base_acceleration = 8;
+    float update_rate = 2;
 
     // Attached to a gameobject
     // if the meeple has been observed recently, an internal AI function will run every update, to determine what to do
@@ -69,14 +82,45 @@ public class Meeple : MonoBehaviour
         currentlyPerforming = null;
         // there is only one city game object
         city = GameObject.FindGameObjectWithTag("city").GetComponent<City>();
+        base_speed = agent.speed;
+        base_acceleration = agent.acceleration;
     }
+
+    void calculateMorale(){
+        meepleSim.morale = 1.0f;
+        List<ActiveThought> todelete = new List<ActiveThought>();
+        foreach(ActiveThought thought in thoughts){
+            meepleSim.morale += thought.morale;
+            thought.length -= (Time.deltaTime * city.timeWarp)+update_rate;
+            if(thought.length <= 0){
+                // we dont delete them now because it will mess up the foreach loop
+                // this is a quirk with how these foreach loop work, maybe using an index loop might be better
+                todelete.Add(thought);
+            }
+        }
+        foreach(ActiveThought thoughtToDelete in todelete){
+            thoughts.Remove(thoughtToDelete);
+        }
+        if(meepleSim.morale > 1.0f){
+            meepleSim.morale = 1.0f;
+        }
+        if(meepleSim.morale < 0){
+            meepleSim.morale = 0;
+        }
+    }
+
     void run_AI(){
         float[] needs = {meepleSim.hunger,meepleSim.sleep,meepleSim.social,meepleSim.fun,meepleSim.hygiene,meepleSim.bathroom};
         string[] needNames = {"hunger", "sleep","social","fun","hygiene","bathroom"};
         int i = 0;
         float[] needVals = new float[6];
         foreach(float need in needs){
-            needVals[i] = meepleSim.needsCurves[i].Evaluate(need/100);
+            needVals[i] = meepleSim.needsCurves[i].Evaluate(need);
+            if(needVals[i] > 0.5f){
+                if(thoughts.FindIndex(tho => tho.ID == baseThoughtCollection[i].activeThought.ID) == -1){
+                    thoughts.Add(baseThoughtCollection[i].activeThought.copy());
+                }
+            }
             i += 1;
         }
         var result = Enumerable.Range(0, needVals.Length)
@@ -195,7 +239,7 @@ public class Meeple : MonoBehaviour
         return (val - oldmin) * (newmax - newmin) / (oldmax - oldmin) + newmin;
     }
     bool PerformBasicInteraction(Action action){
-        float time_elapsed = Time.deltaTime;
+        float time_elapsed = Time.deltaTime*city.timeWarp;
         action.timeSpentPerforming += time_elapsed;
 
         animator.Play(action.interaction.animationToPlay);
@@ -230,6 +274,9 @@ public class Meeple : MonoBehaviour
         }
         if(action.timeSpentPerforming >= action.interaction.interactionLength){
             animator.Play("idle");
+            foreach(Thought thought in action.interaction.induceThoughts){
+                thoughts.Add(thought.activeThought.copy());
+            }
             return true;
         } else {
             return false;
@@ -237,13 +284,16 @@ public class Meeple : MonoBehaviour
     }
     void Update(){
         if(observed){
-            // we are being observed, run the ai
-            meepleSim.hunger += (meepleSim.hunger<100) ? Time.deltaTime : 0;
-            meepleSim.social += (meepleSim.social<100) ? Time.deltaTime : 0;
-            meepleSim.sleep += (meepleSim.sleep<100) ? Time.deltaTime : 0;
-            meepleSim.hygiene += (meepleSim.hygiene<100) ? Time.deltaTime : 0;
-            meepleSim.bathroom += (meepleSim.bathroom<100) ? Time.deltaTime : 0;
-            meepleSim.fun += (meepleSim.fun<100) ? Time.deltaTime : 0;
+            // needs increase over time
+            meepleSim.hunger += (meepleSim.hunger<1) ? (Time.deltaTime/100)*city.timeWarp : 0;
+            meepleSim.social += (meepleSim.social<1) ? (Time.deltaTime/100)*city.timeWarp : 0;
+            meepleSim.sleep += (meepleSim.sleep<1) ? (Time.deltaTime/100)*city.timeWarp : 0;
+            meepleSim.hygiene += (meepleSim.hygiene<1) ? (Time.deltaTime/100)*city.timeWarp : 0;
+            meepleSim.bathroom += (meepleSim.bathroom<1) ? (Time.deltaTime/100)*city.timeWarp : 0;
+            meepleSim.fun += (meepleSim.fun<1) ? (Time.deltaTime/100)*city.timeWarp : 0;
+
+            agent.speed = base_speed * city.timeWarp;
+            agent.acceleration = base_acceleration * city.timeWarp;
 
             actionQueue = actionQueue.OrderBy(x => x.priority).ToList();
             if(actionQueue.Count > 0 && !currentlyPerforming.active){
@@ -268,16 +318,16 @@ public class Meeple : MonoBehaviour
                     }
                 }
             }
-            //for debug only
-            // the update rate for every meeple will be global on the final version probably
-            temp_count += Time.deltaTime;
-            if(temp_count > 2){
+
+            temp_count += Time.deltaTime * city.timeWarp;
+            if(temp_count > update_rate){
                 temp_count = 0;
                 run_AI();
+                calculateMorale();
             }
 
-            erasure_counter += Time.deltaTime;
-            if(erasure_counter > 4){
+            erasure_counter += Time.deltaTime * city.timeWarp;
+            if(erasure_counter > update_rate*2){
                 // if any action is over an hour old
                 // potential bug: this will reset all actions once the week ends
                 // this shouldnt be a problem though

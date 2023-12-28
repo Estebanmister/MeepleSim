@@ -17,10 +17,10 @@ MonoBehaviour:
   animationToPlay: interact
   hunger: 0
   sleep: 0
-  social: 100
+  social: 1
   fun: 0
   hygiene: 0
-  bathroom: 100
+  bathroom: 1
   interactionLength: 2
   skillCheck: 0
   skillsToCheck: []

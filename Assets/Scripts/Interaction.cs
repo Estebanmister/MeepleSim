@@ -17,6 +17,7 @@ public class Interaction : ScriptableObject
     public bool skillIncrease = false;
     public string[] skillsToChange;
     public int[] skillLevelstoChange;
+    public Thought[] induceThoughts;
 }
 
 public class SocialInteraction : Interaction

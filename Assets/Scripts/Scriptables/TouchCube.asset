@@ -15,7 +15,7 @@ MonoBehaviour:
   ID: basic
   description: Touch cube
   animationToPlay: interact
-  hunger: 100
+  hunger: 1
   sleep: 0
   social: 0
   fun: 0

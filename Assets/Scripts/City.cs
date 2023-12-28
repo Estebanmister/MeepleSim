@@ -5,6 +5,7 @@ using UnityEngine;
 
 public class City : MonoBehaviour
 {
+    public float timeWarp = 1;
     // never resets;
     public int weeks;
     // resets after 7 days
@@ -22,7 +23,7 @@ public class City : MonoBehaviour
     }
 
     void Update(){
-        globalTime += Time.deltaTime;
+        globalTime += Time.deltaTime*timeWarp;
         // after 7 days
         if(globalTime > 604800){
             globalTime = 0;
