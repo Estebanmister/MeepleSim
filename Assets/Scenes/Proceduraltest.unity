@@ -343,7 +343,7 @@ GameObject:
   - component: {fileID: 1912675935}
   - component: {fileID: 1912675934}
   m_Layer: 0
-  m_Name: GameObject
+  m_Name: gen
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -362,11 +362,31 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   wall: {fileID: 8364325020610793522, guid: b1952be758a0d644a82e96dadcaf9a23, type: 3}
-  corner: {fileID: 0}
   floorTile: {fileID: 1880249211074043347, guid: fbeb0e93cfe16794bb815cdf7d6e4b16,
     type: 3}
+  doorWay: {fileID: 8364325020610793522, guid: a2d1bc8c757542e47978be9bb21cb995, type: 3}
   length: 20
   width: 20
+  bathroomFurniture:
+  - {fileID: 2435522079770984840, guid: 0fe63ef54bb47ba4f81ab058c3659dea, type: 3}
+  - {fileID: 7043197930322288192, guid: 9116fbb2c1d60374eb93b5f6bbde05ba, type: 3}
+  - {fileID: 5812303066351884436, guid: e748c1039d2b9144087be9d21cdaea40, type: 3}
+  bedroomFurniture:
+  - {fileID: 8484668222289320766, guid: fd57d56ae64afb34a9cfaccac1853c3a, type: 3}
+  - {fileID: 207956407115511219, guid: ceb76085febcef94abb281b6aabf59bd, type: 3}
+  - {fileID: 2234599415327541887, guid: 973005acb21d4c249aab6f2235d26bc0, type: 3}
+  - {fileID: 6592543217183872207, guid: d83e343f2656c81458a635b353e1bbf3, type: 3}
+  kitchenFurniture:
+  - {fileID: 4486488180942276344, guid: d261930b64cc43d45b6f583e6f618be9, type: 3}
+  - {fileID: 3945408189524157405, guid: 45a44f36d7f24324f91f9817ac023ecd, type: 3}
+  - {fileID: 2832891348051675901, guid: 687b722d79e4ec94aae64cf47ee1b8e9, type: 3}
+  - {fileID: 3776203943726142722, guid: 6a10a4b24dd5c6946a1b279a6503ff30, type: 3}
+  - {fileID: 6592543217183872207, guid: d83e343f2656c81458a635b353e1bbf3, type: 3}
+  livingFurniture:
+  - {fileID: 6592543217183872207, guid: d83e343f2656c81458a635b353e1bbf3, type: 3}
+  - {fileID: 2711444553981175647, guid: 1eeda5ea35deb214e9225be0abfbd4fd, type: 3}
+  - {fileID: 1691600187016006727, guid: fe911882ac2b58e45a0392adc24de204, type: 3}
+  - {fileID: 286571480424204970, guid: 9186e7615fd0f8440bf1ae77aa500c11, type: 3}
 --- !u!4 &1912675933
 Transform:
   m_ObjectHideFlags: 0
