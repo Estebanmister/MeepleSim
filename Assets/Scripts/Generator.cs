@@ -16,7 +16,7 @@ public class Generator : MonoBehaviour
     public GameObject[] bedroomFurniture;
     public GameObject[] kitchenFurniture;
     public GameObject[] livingFurniture;
-    float count = 0;
+    public GameObject door;
 
     // thanks Mark from stackoverflow
     int roundUp(int numToRound, int multiple)
@@ -30,19 +30,8 @@ public class Generator : MonoBehaviour
 
         return numToRound + multiple - remainder;
     }
-    void Update(){
-        count += Time.deltaTime;
-        if(count > 0.5f){
-            count = 0;
-            foreach(Transform child in transform.GetComponentInChildren<Transform>()){
-                Destroy(child.gameObject);
-            }
-            length = Random.Range(10,40);
-            width = Random.Range(10,40);
-            length = roundUp(length, 2);
-            width = roundUp(width, 2);
-            GenerateWalls();
-        }
+    void Start(){
+        GenerateWalls();
         
     }
     void PutFurniture(int centerX, int centerY, int roomW, int roomL, string roompos, string type){
@@ -59,13 +48,43 @@ public class Generator : MonoBehaviour
             furnitures = 4;
             toCreate = livingFurniture.ToList();
         }
+        bool maindoor = false;
+
+        // to check if the  furniture we move around is touching the edge or not
+        bool reachedCornerX = false;
+        bool reachedCornerZ = false;
+
         List<int> occupiedX = new List<int>();
         List<int> occupiedZ = new List<int>();
+
+        bool doorPlaced = false;
+        bool reAttempt = false;
+        int lastChoice = 0;
+        int indx = Random.Range(0, toCreate.Count);
         for(int i = furnitures; i > 0; i-= 1){
-            int indx = Random.Range(0, toCreate.Count);
-            GameObject newfurn = Instantiate(toCreate[indx], transform);
-            toCreate.RemoveAt(indx);
             int choice = Random.Range(0,2);
+            if(reAttempt){
+                reAttempt = false;
+                if(lastChoice == 0){
+                    choice = 1;
+                } else{
+                    choice = 0;
+                }
+            } else {
+                indx = toCreate.Count-1;
+            }
+            
+            GameObject newfurn;
+            if(!maindoor && type == "living"){
+                maindoor = true;
+                newfurn = Instantiate(door, transform);
+                doorPlaced = true;
+            } else {
+                doorPlaced = false;
+                newfurn = Instantiate(toCreate[indx], transform);
+            }
+            
+            
             
             if(roompos == "topleft"){
                 if(choice == 0){
@@ -107,17 +126,57 @@ public class Generator : MonoBehaviour
                     newfurn.transform.rotation = Quaternion.Euler(0,180,0);
                 }
             }
+            bool placed = true;
+            List<int> sizeZ = Enumerable.Range((int)newfurn.transform.localPosition.z,(int)newfurn.transform.localPosition.z+(int)newfurn.transform.localScale.z-1).ToList();
+            List<int> sizeX = Enumerable.Range((int)newfurn.transform.localPosition.x,(int)newfurn.transform.localPosition.x+(int)newfurn.transform.localScale.x-1).ToList();
             if(choice == 0){
-                while(occupiedZ.Contains((int)newfurn.transform.localPosition.z)){
-                    newfurn.transform.localPosition += Vector3.forward;
+                while(occupiedZ.Any(item => sizeZ.Contains(item))){
+                    if(reachedCornerZ){
+                        newfurn.transform.localPosition -= Vector3.forward;
+                        if(newfurn.transform.localPosition.z < centerY-roomL){
+                            Destroy(newfurn);
+                            placed = false;
+                            break;
+                        }
+                    } else {
+                        newfurn.transform.localPosition += Vector3.forward;
+                        if(newfurn.transform.localPosition.z > centerY+roomL){
+                            reachedCornerZ = true;
+                        }
+                    }
+                    sizeZ = Enumerable.Range((int)newfurn.transform.localPosition.z,(int)newfurn.transform.localPosition.z+(int)newfurn.transform.localScale.z-1).ToList();
+                    
                 }
             } else {
-                while(occupiedX.Contains((int)newfurn.transform.localPosition.x)){
-                    newfurn.transform.localPosition += Vector3.right;
+                while(occupiedX.Any(item => sizeX.Contains(item))){
+                    if(reachedCornerX){
+                        newfurn.transform.localPosition -= Vector3.right;
+                        if(newfurn.transform.localPosition.x < centerX-roomW){
+                            Destroy(newfurn);
+                            placed = false;
+                            break;
+                        }
+                    } else {
+                        newfurn.transform.localPosition += Vector3.right;
+                        if(newfurn.transform.localPosition.x > centerX+roomW){
+                            reachedCornerX = true;
+                        }
+                    }
+                    sizeX = Enumerable.Range((int)newfurn.transform.localPosition.x,(int)newfurn.transform.localPosition.x+(int)newfurn.transform.localScale.x-1).ToList();
                 }
             }
-            occupiedX.Add((int)newfurn.transform.localPosition.x);
-            occupiedZ.Add((int)newfurn.transform.localPosition.z);
+            if(placed){
+                occupiedX.AddRange(sizeX);
+                occupiedZ.AddRange(sizeZ);
+                if(!doorPlaced){
+                    toCreate.RemoveAt(indx);
+                }
+                
+            } else {
+                reAttempt = true;
+                lastChoice = choice;
+            }
+            
             
         }
         
@@ -125,22 +184,22 @@ public class Generator : MonoBehaviour
     void GenerateWalls()
     {
         // Put down individual walls to make up the sides
-        for(int i = 1; i <= length; i += 1){
+        for(int i = 1; i <= length+1; i += 1){
             GameObject instan = Instantiate(wall, transform);
-            instan.transform.localPosition = new Vector3(width, 0, i);
+            instan.transform.localPosition = new Vector3(width+1, 0, i);
             instan.transform.rotation = Quaternion.Euler(0,90,0);
         }
-        for(int i = 0; i < length; i += 1){
+        for(int i = 0; i <= length; i += 1){
             GameObject instan = Instantiate(wall, transform);
             instan.transform.localPosition = new Vector3(0, 0, i);
             instan.transform.rotation = Quaternion.Euler(0,-90,0);
         }
-        for(int i = 0; i < width; i += 1){
+        for(int i = 0; i <= width; i += 1){
             GameObject instan = Instantiate(wall, transform);
-            instan.transform.localPosition = new Vector3(i, 0, length);
+            instan.transform.localPosition = new Vector3(i, 0, length+1);
             instan.transform.rotation = Quaternion.Euler(0,0,0);
         }
-        for(int i = 1; i <= width; i += 1){
+        for(int i = 1; i <= width+1; i += 1){
             GameObject instan = Instantiate(wall, transform);
             instan.transform.localPosition = new Vector3(i, 0, 0);
             instan.transform.rotation = Quaternion.Euler(0,180,0);
@@ -149,11 +208,13 @@ public class Generator : MonoBehaviour
         // Create floor by combining all meshes of tiles at the correct position
         CombineInstance[] combine = new CombineInstance[width*length];
         int ii = 0;
-        for(int x = 0; x<width; x +=1){
-            for(int y = 0; y<length; y+=1){
+        Vector3 holdme = transform.position;
+        transform.position = Vector3.zero;
+        for(int x = 0; x<width-1; x +=1){
+            for(int y = 0; y<length-1; y+=1){
                 GameObject instan = Instantiate(floorTile, transform);
                 instan.transform.localPosition = new Vector3(x, 0, y);
-                combine[ii].mesh = instan.GetComponent<MeshFilter>().sharedMesh;
+                combine[ii].mesh = instan.GetComponentInChildren<MeshFilter>().sharedMesh;
                 combine[ii].transform = instan.transform.localToWorldMatrix;
                 // we do not want a crap ton of game objects for tiles, so we remove them after getting our mesh
                 Destroy(instan);
@@ -162,12 +223,13 @@ public class Generator : MonoBehaviour
         }
         // render the floor
         Mesh mesh = new Mesh();
-        mesh.CombineMeshes(combine);
+        mesh.CombineMeshes(combine,true,true);
+        mesh.Optimize();
         transform.GetComponent<MeshFilter>().sharedMesh = mesh;
-
+        transform.position = holdme;
         // time to divide the apartment into rooms
-        for(int x = 0; x<width; x +=1){
-            if(x % (width/2) == 0){
+        for(int x = 0; x<=width; x +=1){
+            if(x % (width/2) == 0 && x != width){
                 GameObject instan = Instantiate(doorWay, transform);
                 instan.transform.localPosition = new Vector3(x, 0, length/2);
                 x += 1;
@@ -177,8 +239,8 @@ public class Generator : MonoBehaviour
             }
             
         }
-        for(int y = 0; y<length; y +=1){
-            if(y % (length/2) == 0){
+        for(int y = 0; y<=length; y +=1){
+            if(y % (length/2) == 0 && y !=length){
                 GameObject instan = Instantiate(doorWay, transform);
                 instan.transform.localPosition = new Vector3(width/2, 0, y);
                 instan.transform.rotation = Quaternion.Euler(0,-90,0);
