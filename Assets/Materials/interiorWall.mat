@@ -42,7 +42,7 @@ Material:
     - _QueueOffset: 0
     - _ao: 1
     - _metallic: 0
-    - _plane: 0.2
+    - _plane: 0.08
     - _smooth: 0
     m_Colors:
     - _Color: {r: 1, g: 1, b: 1, a: 0}

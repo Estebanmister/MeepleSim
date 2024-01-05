@@ -40,7 +40,10 @@ Material:
     m_Floats:
     - _QueueControl: 0
     - _QueueOffset: 0
-    - _plane: 0.5
+    - _ao: 1
+    - _metallic: 0
+    - _plane: 0.1
+    - _smooth: 0.5
     m_Colors:
     - _Color: {r: 1, g: 1, b: 1, a: 0}
   m_BuildTextureStacks: []
