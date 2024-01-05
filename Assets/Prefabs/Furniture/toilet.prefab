@@ -1,5 +1,36 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1 &2513931148306525818
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3913758750066636137}
+  m_Layer: 0
+  m_Name: GameObject
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3913758750066636137
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2513931148306525818}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 3.98, y: 0, z: 0.85}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1143003648518415100}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &5407540583965534603
 GameObject:
   m_ObjectHideFlags: 0
@@ -94,6 +125,8 @@ GameObject:
   - component: {fileID: 1143003648518415100}
   - component: {fileID: 1661519253552588800}
   - component: {fileID: 6220164841463747395}
+  - component: {fileID: 7881644455674579334}
+  - component: {fileID: 1331284250200488919}
   m_Layer: 0
   m_Name: toilet
   m_TagString: Untagged
@@ -115,6 +148,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 8819760331062856014}
+  - {fileID: 3913758750066636137}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 270.91602, z: 0}
 --- !u!33 &1661519253552588800
@@ -169,3 +203,46 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!65 &7881644455674579334
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6178265824261176151}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 3.0137491, y: 2.8482003, z: 1.9740001}
+  m_Center: {x: 1.5068746, y: 1.4241002, z: 0.98700005}
+--- !u!114 &1331284250200488919
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6178265824261176151}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8bb3a2615c455264baba9d62ef3509be, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ID: toilet
+  interactionPoint: {fileID: 3913758750066636137}
+  hunger: 0
+  sleep: 0
+  social: 0
+  fun: 0
+  hygiene: 0
+  bathroom: 0
+  interactions:
+  - {fileID: 11400000, guid: 30aa89d260ad6dd429158619e83bdc98, type: 2}

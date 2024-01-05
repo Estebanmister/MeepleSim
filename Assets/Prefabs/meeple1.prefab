@@ -607,7 +607,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   meepleSim:
     type: worker
-    hunger: 0.4
+    hunger: 0
     sleep: 0
     social: 0
     fun: 0
