@@ -7,6 +7,7 @@ TagManager:
   - city
   - meeple
   - streets
+  - furniture
   layers:
   - Default
   - TransparentFX
@@ -16,7 +17,7 @@ TagManager:
   - UI
   - roomBounds
   - walls
-  - 
+  - clickable
   - 
   - 
   - 
