@@ -9,7 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2053687598168865320}
-  m_Layer: 8
+  m_Layer: 0
   m_Name: GameObject
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -41,8 +41,8 @@ GameObject:
   m_Component:
   - component: {fileID: 8781542396776393803}
   - component: {fileID: 4044521717836011531}
-  - component: {fileID: 7751385381290868071}
-  m_Layer: 8
+  - component: {fileID: 7971169048078352647}
+  m_Layer: 0
   m_Name: bed
   m_TagString: furniture
   m_Icon: {fileID: 0}
@@ -87,7 +87,7 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 3.2781549, y: 1.2960255, z: 3.5467188}
   m_Center: {x: 1.3310881, y: 0.5974325, z: 1.7136599}
---- !u!114 &7751385381290868071
+--- !u!114 &7971169048078352647
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -96,17 +96,14 @@ MonoBehaviour:
   m_GameObject: {fileID: 8484668222289320766}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8bb3a2615c455264baba9d62ef3509be, type: 3}
+  m_Script: {fileID: 11500000, guid: 79f8ed8b137edb94aa6fbfd0e092f6d5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ID: bed
+  Fname: bed
   interactionPoint: {fileID: 2053687598168865320}
-  hunger: 0
-  sleep: 0
-  social: 0
-  fun: 0
-  hygiene: 0
-  bathroom: 0
+  animationIDToPlay: intereact
+  health: 1
+  morale: 1
   interactions:
   - {fileID: 11400000, guid: 1f11e599ba39da549921c664f5d19349, type: 2}
 --- !u!1001 &5971104194792029721
@@ -123,19 +120,19 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 100000, guid: 2c4f38101b0b06a4c81eb0534949cfbb, type: 3}
       propertyPath: m_Layer
-      value: 8
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 100002, guid: 2c4f38101b0b06a4c81eb0534949cfbb, type: 3}
       propertyPath: m_Layer
-      value: 8
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 100004, guid: 2c4f38101b0b06a4c81eb0534949cfbb, type: 3}
       propertyPath: m_Layer
-      value: 8
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 100006, guid: 2c4f38101b0b06a4c81eb0534949cfbb, type: 3}
       propertyPath: m_Layer
-      value: 8
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 400000, guid: 2c4f38101b0b06a4c81eb0534949cfbb, type: 3}
       propertyPath: m_LocalScale.x
