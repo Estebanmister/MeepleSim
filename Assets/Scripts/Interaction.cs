@@ -6,8 +6,7 @@ using UnityEngine.Rendering;
 [CreateAssetMenu()]
 public class Interaction : ScriptableObject
 {
-    public string ID = "basic";
-    public string description = "";
+    public string IntName = "";
     public string animationToPlay = "interact";
     public float hunger,sleep,social,fun,hygiene,bathroom = 0;
     public float interactionLength = 1;
@@ -18,20 +17,4 @@ public class Interaction : ScriptableObject
     public string[] skillsToChange;
     public int[] skillLevelstoChange;
     public Thought[] induceThoughts;
-}
-
-public class SocialInteraction : Interaction
-{
-    public SocialInteraction(){
-        ID = "social";
-    }
-    public Meeple otherMeeple;
-}
-
-public class TransportInteraction: Interaction
-{
-    public TransportInteraction(){
-        ID = "transport";
-    }
-    public Vector3 position;
 }
