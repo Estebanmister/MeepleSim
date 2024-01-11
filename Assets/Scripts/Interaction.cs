@@ -17,4 +17,6 @@ public class Interaction : ScriptableObject
     public string[] skillsToChange;
     public int[] skillLevelstoChange;
     public Thought[] induceThoughts;
+    // Do player's needs decay while perforing the action?
+    public bool needsDecay = true;
 }

@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 [Serializable]
 public class Action {
@@ -24,6 +25,7 @@ public class Relation {
 }
 public class Player : MonoBehaviour
 {
+    public float speed = 2;
     public float hunger,sleep,social,fun,hygiene,bathroom = 1.0f;
     public AnimationCurve[] needsCurves = new AnimationCurve[6];
     public float morale = 1.0f;
@@ -56,8 +58,44 @@ public class Player : MonoBehaviour
         }
     }
 
+                /* ----------------  Thanks to daveMennenoh on the Unity forums for this  ---------------- */
+    int UILayer;
+    //Returns 'true' if we touched or hovering on Unity UI element.
+    public bool IsPointerOverUIElement()
+    {
+        return IsPointerOverUIElement(GetEventSystemRaycastResults());
+    }
+ 
+ 
+    //Returns 'true' if we touched or hovering on Unity UI element.
+    private bool IsPointerOverUIElement(List<RaycastResult> eventSystemRaysastResults)
+    {
+        for (int index = 0; index < eventSystemRaysastResults.Count; index++)
+        {
+            RaycastResult curRaysastResult = eventSystemRaysastResults[index];
+            if (curRaysastResult.gameObject.layer == UILayer)
+                return true;
+        }
+        return false;
+    }
+ 
+    //Gets all event system raycast results of current mouse or touch position.
+    static List<RaycastResult> GetEventSystemRaycastResults()
+    {
+        PointerEventData eventData = new PointerEventData(EventSystem.current);
+        eventData.position = Input.mousePosition;
+        List<RaycastResult> raysastResults = new List<RaycastResult>();
+        EventSystem.current.RaycastAll(eventData, raysastResults);
+        return raysastResults;
+    }
+
+                /* ------------------------------------------------------------------------------------------ */
+
     public void click(InputAction.CallbackContext context){
         if(context.started && Application.isFocused){
+            if(IsPointerOverUIElement()){
+                return;
+            }
             Ray ray = Camera.main.ScreenPointToRay(playerInput.actions["mousePos"].ReadValue<Vector2>());
             Debug.DrawLine(ray.origin,ray.direction*100, Color.magenta, 100);
             RaycastHit[] hits = Physics.RaycastAll(ray, 10);
@@ -94,7 +132,6 @@ public class Player : MonoBehaviour
         if(context.started && Application.isFocused){
             Transform cam = cameraPivot.GetChild(0);
             Vector3 tomove = -(cam.localPosition.normalized * (context.ReadValue<Vector2>().y/500));
-            Debug.Log(cam.localPosition.magnitude);
             if(cam.localPosition.magnitude < 2){
                 if(-context.ReadValue<Vector2>().y > 0){
                     cam.localPosition += tomove;
@@ -122,22 +159,29 @@ public class Player : MonoBehaviour
     }
     void Start()
     {
+        UILayer = LayerMask.NameToLayer("UI");
         playerInput = GetComponent<PlayerInput>();
         characterController = GetComponentInChildren<CharacterController>();
         animator = GetComponentInChildren<Animator>();
     }
     bool DoInteraction(Action action){
-        float time_between_frames = Time.deltaTime;
+        float time_between_frames = (Time.deltaTime*WorldProperties.timeWarp);
         action.timeSpentPerforming += time_between_frames;
-
+        if (action.interaction.needsDecay){
+            DecayNeeds();
+        }
         animator.Play(action.interaction.animationToPlay);
-
-        hunger -= action.interaction.hunger * (time_between_frames/action.interaction.interactionLength);
-        social -= action.interaction.social * (time_between_frames/action.interaction.interactionLength);
-        sleep -= action.interaction.sleep * (time_between_frames/action.interaction.interactionLength);
-        hygiene -= action.interaction.hygiene * (time_between_frames/action.interaction.interactionLength);
-        bathroom -= action.interaction.bathroom * (time_between_frames/action.interaction.interactionLength);
-        fun -= action.interaction.fun * (time_between_frames/action.interaction.interactionLength);
+        float timeframe = action.interaction.interactionLength;
+        if(timeframe == -1){
+            // every need will increase per minute
+            timeframe = 60;
+        }
+        hunger -= action.interaction.hunger * (time_between_frames/timeframe);
+        social -= action.interaction.social * (time_between_frames/timeframe);
+        sleep -= action.interaction.sleep * (time_between_frames/timeframe);
+        hygiene -= action.interaction.hygiene * (time_between_frames/timeframe);
+        bathroom -= action.interaction.bathroom * (time_between_frames/timeframe);
+        fun -= action.interaction.fun * (time_between_frames/timeframe);
         
         fun = fun < 0 ? 0 : fun;
         bathroom = bathroom < 0 ? 0 : bathroom;
@@ -159,19 +203,22 @@ public class Player : MonoBehaviour
             foreach(string skill in action.interaction.skillsToChange){
                 int index = skills.FindIndex(sk => sk.id == skill);
                 if(index != -1){
-                    skills[index].level += action.interaction.skillLevelstoChange[changeindex] * (time_between_frames/action.interaction.interactionLength);
+                    skills[index].level += action.interaction.skillLevelstoChange[changeindex] * (time_between_frames/timeframe);
                 } else {
                     skills.Add(new Skill{id = skill, level = 1});
                 }
                 changeindex += 1;
             }
         }
-        if(action.timeSpentPerforming >= action.interaction.interactionLength || 
-            fun == 0 || hunger == 0 || social == 0 || sleep == 0 || hygiene == 0 || bathroom == 0){
-            animator.Play("idle");
-            foreach(Thought thought in action.interaction.induceThoughts){
-                thoughts.Add(thought.activeThought.copy());
-            }
+        if(hunger == 0 || sleep == 0 || hygiene == 0 || bathroom == 0){
+            CancelInteraction();
+            return true;
+        }
+        if(action.interaction.interactionLength == -1){
+            // this interaction can last till needs are met
+            return false;
+         }else if (action.timeSpentPerforming >= action.interaction.interactionLength){
+            CancelInteraction();
             return true;
         } else {
             return false;
@@ -182,7 +229,7 @@ public class Player : MonoBehaviour
         List<ActiveThought> todelete = new List<ActiveThought>();
         foreach(ActiveThought thought in thoughts){
             morale += thought.morale;
-            thought.length -= (Time.deltaTime );
+            thought.length -= ((Time.deltaTime*WorldProperties.timeWarp) );
             if(thought.length <= 0){
                 // we dont delete them now because it will mess up the foreach loop
                 // this is a quirk with how these foreach loop work, maybe using an index loop might be better
@@ -199,8 +246,26 @@ public class Player : MonoBehaviour
             morale = 0;
         }
     }
+    void DecayNeeds(){
+        
+        //social += (social<1) ? ((Time.deltaTime*WorldProperties.timeWarp)/150) : 0;
+        
+        if(playerInput.actions["sprint"].IsPressed()){
+            hunger += (hunger<1) ? ((Time.deltaTime*WorldProperties.timeWarp)/200) : 0;
+            sleep += (sleep<1) ? ((Time.deltaTime*WorldProperties.timeWarp)/400) : 0;
+            hygiene += (hygiene<1) ? ((Time.deltaTime*WorldProperties.timeWarp)/200) : 0;
+        } else {
+            hunger += (hunger<1) ? ((Time.deltaTime*WorldProperties.timeWarp)/500) : 0;
+            sleep += (sleep<1) ? ((Time.deltaTime*WorldProperties.timeWarp)/1000) : 0;
+            hygiene += (hygiene<1) ? ((Time.deltaTime*WorldProperties.timeWarp)/500) : 0;
+        }
+        
+        bathroom += (bathroom<1) ? ((Time.deltaTime*WorldProperties.timeWarp)/200) : 0;
+        //fun += (fun<1) ? ((Time.deltaTime*WorldProperties.timeWarp)/150) : 0;
+    }
     void Update()
     {
+        animator.speed = WorldProperties.timeWarp;
         // pan camera
         Vector2 mousepos = playerInput.actions["mouse"].ReadValue<Vector2>();
         if(playerInput.actions["middleClick"].IsPressed()){
@@ -228,13 +293,7 @@ public class Player : MonoBehaviour
             }
             cameraPivot.localRotation = Quaternion.Slerp(cameraPivot.localRotation, Quaternion.Euler(-viewy, viewx, 0), 0.8f);
         }
-        // decay needs
-        hunger += (hunger<1) ? (Time.deltaTime/150) : 0;
-        social += (social<1) ? (Time.deltaTime/150) : 0;
-        sleep += (sleep<1) ? (Time.deltaTime/150) : 0;
-        hygiene += (hygiene<1) ? (Time.deltaTime/150) : 0;
-        bathroom += (bathroom<1) ? (Time.deltaTime/150) : 0;
-        fun += (fun<1) ? (Time.deltaTime/150) : 0;
+       
         // todo speed changes with warp
         //agent.speed = base_speed ;
         //agent.acceleration = base_acceleration ;
@@ -244,11 +303,15 @@ public class Player : MonoBehaviour
                     transform.position = Vector3.Lerp(transform.position,performing.point.position, 0.1f);
                     animator.transform.parent.forward = performing.point.forward;
                 } else {
-                    performing.active = !DoInteraction(performing);
+                    DoInteraction(performing);
                 }
                 // cannot move while performing an action
                 return;
+            } else {
+                DecayNeeds();
             }
+        } else {
+            DecayNeeds();
         }
         float[] needs = {hunger,sleep,social,fun,hygiene,bathroom};
         string[] needNames = {"hunger", "sleep","social","fun","hygiene","bathroom"};
@@ -282,13 +345,25 @@ public class Player : MonoBehaviour
         if(directionToMove.x < 0){
             animator.SetBool("left", true);
         }
+        float modifiedSpeed = speed;
+        if(playerInput.actions["sprint"].IsPressed()){
+            modifiedSpeed *= 2;
+        }
         directionToMove = Quaternion.Euler(0, viewx, 0) * directionToMove;
-        characterController.Move(directionToMove*Time.fixedDeltaTime);
+        characterController.Move(directionToMove * modifiedSpeed *(Time.fixedDeltaTime*WorldProperties.timeWarp));
         if(directionToMove.magnitude != 0){
             animator.transform.parent.forward = directionToMove;
-            animator.SetBool("walking", true);
+            if(playerInput.actions["sprint"].IsPressed()){
+                animator.SetBool("running", true);
+                animator.SetBool("walking", true);
+            } else {
+                animator.SetBool("walking", true);
+                animator.SetBool("running", false);
+            }
+            
         } else {
             animator.SetBool("walking", false);
+            animator.SetBool("running", false);
         }
     }
 }

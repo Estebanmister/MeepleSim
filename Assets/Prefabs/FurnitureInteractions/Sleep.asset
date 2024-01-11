@@ -14,13 +14,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   IntName: Sleep
   animationToPlay: sleep
-  hunger: 0
-  sleep: 1
+  hunger: -0.02
+  sleep: 0.05
   social: 0
   fun: 0
   hygiene: 0
-  bathroom: 0
-  interactionLength: 30
+  bathroom: -0.06
+  interactionLength: -1
   skillCheck: 0
   skillsToCheck: []
   requiredLevels: 
@@ -28,3 +28,4 @@ MonoBehaviour:
   skillsToChange: []
   skillLevelstoChange: 
   induceThoughts: []
+  needsDecay: 0
