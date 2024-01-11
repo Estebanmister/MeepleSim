@@ -96,14 +96,17 @@ MonoBehaviour:
   m_GameObject: {fileID: 8484668222289320766}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 79f8ed8b137edb94aa6fbfd0e092f6d5, type: 3}
+  m_Script: {fileID: 11500000, guid: 647c19512aa7946cdac467bedf1508dd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   Fname: bed
   interactionPoint: {fileID: 2053687598168865320}
-  animationIDToPlay: intereact
-  health: 1
-  morale: 1
+  animationIDToPlay: sleep
+  timeRequired: 0
+  seatsAvailable: 1
+  seatsTaken: 0
+  health: 0
+  morale: 0
   interactions:
   - {fileID: 11400000, guid: 1f11e599ba39da549921c664f5d19349, type: 2}
 --- !u!1001 &5971104194792029721

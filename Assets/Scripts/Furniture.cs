@@ -8,7 +8,7 @@ public class Furniture : MonoBehaviour
     // Where the player/meeple will stand while performing the interaction animation
     public Transform interactionPoint;
     // for meeples
-    public string animationIDToPlay = "intereact";
+    public string animationIDToPlay = "interact";
     public float timeRequired;
 
     //multiple meeples can use

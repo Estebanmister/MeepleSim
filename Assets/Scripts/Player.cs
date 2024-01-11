@@ -9,7 +9,7 @@ public class Action {
     public float timeStarted;
     public float timeSpentPerforming = 0;
     public float priority;
-    public Vector3 position;
+    public Transform point;
     public bool active = false;
 }
 [Serializable]
@@ -42,8 +42,9 @@ public class Player : MonoBehaviour
     public float maxZoom = 100;
     public float minZoom = 20;
     Action performing = null;
-    public void performAction(Action action){
-        performing = action;
+    Transform lastInteractionSpot;
+    public void performAction(Interaction interaction){
+        performing = new Action{interaction=interaction,timeStarted=Time.time,priority=1,active=true,point=lastInteractionSpot};
         performing.active = true;
     }
 
@@ -56,17 +57,26 @@ public class Player : MonoBehaviour
     }
 
     public void click(InputAction.CallbackContext context){
-        if(context.started){
+        if(context.started && Application.isFocused){
             Ray ray = Camera.main.ScreenPointToRay(playerInput.actions["mousePos"].ReadValue<Vector2>());
-            RaycastHit hit;
             Debug.DrawLine(ray.origin,ray.direction*100, Color.magenta, 100);
-            if(Physics.Raycast(ray, out hit)){
+            RaycastHit[] hits = Physics.RaycastAll(ray, 10);
+            foreach(RaycastHit hit in hits){
                 if(!ui.menuOpen){
+                    if(performing != null){
+                        if(performing.active){
+                            ui.OpenPersonalMenu(playerInput.actions["mousePos"].ReadValue<Vector2>());
+                            ui.menuOpen = true;
+                            return;
+                        }
+                    }
                     if(Vector3.Distance(transform.position, hit.point) < 4){
                         if(hit.collider.transform.tag == "furniture"){
-                            animator.transform.parent.LookAt(hit.collider.transform);
+                            animator.transform.parent.LookAt(hit.point);
                             animator.transform.parent.rotation = Quaternion.Euler(0,animator.transform.parent.eulerAngles.y,0);
-                            ui.OpenMenu(playerInput.actions["mousePos"].ReadValue<Vector2>(), hit.collider.GetComponent<Furniture>().interactions);
+                            Furniture fun = hit.collider.GetComponent<Furniture>();
+                            lastInteractionSpot = fun.interactionPoint;
+                            ui.OpenMenu(playerInput.actions["mousePos"].ReadValue<Vector2>(), fun.interactions);
                             ui.menuOpen = true;
                             return;
                         }
@@ -75,12 +85,13 @@ public class Player : MonoBehaviour
                             ui.menuOpen = true;
                             return;
                         }
-                }}
+                    }
+                }
             }
         }
     }
-    public void zoom(InputAction.CallbackContext context){
-        if(context.started){
+    public void zoom(InputAction.CallbackContext context ){
+        if(context.started && Application.isFocused){
             Transform cam = cameraPivot.GetChild(0);
             Vector3 tomove = -(cam.localPosition.normalized * (context.ReadValue<Vector2>().y/500));
             Debug.Log(cam.localPosition.magnitude);
@@ -229,7 +240,12 @@ public class Player : MonoBehaviour
         //agent.acceleration = base_acceleration ;
         if(performing != null){
             if(performing.active){
-                performing.active = !DoInteraction(performing);
+                if(Vector3.Distance(performing.point.position, transform.position) > 0.2f){
+                    transform.position = Vector3.Lerp(transform.position,performing.point.position, 0.1f);
+                    animator.transform.parent.forward = performing.point.forward;
+                } else {
+                    performing.active = !DoInteraction(performing);
+                }
                 // cannot move while performing an action
                 return;
             }

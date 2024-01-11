@@ -33,6 +33,7 @@ public class UIControl : MonoBehaviour
         newbutton.transform.localPosition = pos;
         Button but = newbutton.GetComponent<Button>();
         but.onClick.AddListener(() => player.CancelInteraction());
+        but.onClick.AddListener(() => CloseMenu());
         but.GetComponentInChildren<TMP_Text>().text = "Cancel Action";
 
         i += 1;
@@ -72,7 +73,7 @@ public class UIControl : MonoBehaviour
         i += 1;
     }
     public void SelectInteraction(Interaction interaction){
-        player.performAction(new Action{interaction=interaction,timeStarted=Time.time,priority=1,active=true});
+        player.performAction(interaction);
         menuOpen = false;
         foreach(Transform child in transform.GetComponentInChildren<Transform>()){
             Destroy(child.gameObject);
