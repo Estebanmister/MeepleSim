@@ -1,6 +1,8 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
@@ -25,13 +27,14 @@ public class Relation {
 }
 public class Player : MonoBehaviour
 {
+    public float money;
     public float speed = 2;
     public float hunger,sleep,social,fun,hygiene,bathroom = 1.0f;
     public AnimationCurve[] needsCurves = new AnimationCurve[6];
     public float morale = 1.0f;
     public Relation[] relations;
     PlayerInput playerInput;
-    List<Skill> skills = new List<Skill>();
+    Dictionary<string, float> skills = new Dictionary<string, float>();
     public List<ActiveThought> thoughts = new List<ActiveThought>();
     public Thought[] baseThoughtCollection = new Thought[6];
     public UIControl ui;
@@ -45,9 +48,35 @@ public class Player : MonoBehaviour
     public float minZoom = 20;
     Action performing = null;
     Transform lastInteractionSpot;
+    public List<Item> inventory = new List<Item>();
     public void performAction(Interaction interaction){
-        performing = new Action{interaction=interaction,timeStarted=Time.time,priority=1,active=true,point=lastInteractionSpot};
-        performing.active = true;
+        if(interaction is StoreInteraction){
+            StoreInteraction sh = (StoreInteraction)interaction;
+            if(money > sh.price && sh.stock > 0){
+                money -= sh.price;
+                sh.stock -= 1;
+                inventory.Add(sh.item);
+            }
+        } else {
+            if(interaction.skillCheck){
+                if(skills.All(i => interaction.skillsToCheck.Contains(i.Key))){
+                    int i = 0;
+                    foreach(string id in interaction.skillsToCheck){
+                        if(skills[id] < interaction.requiredLevels[i]){
+                            Debug.Log("Cannot be performed");
+                            return;
+                        }
+                        i += 1;
+                    }
+                } else {
+                    Debug.Log("Cannot be performed");
+                    return;
+                }
+            }
+            performing = new Action{interaction=interaction,timeStarted=Time.time,priority=1,active=true,point=lastInteractionSpot};
+            performing.active = true;
+        }
+        
     }
 
     public void CancelInteraction(){
@@ -118,6 +147,10 @@ public class Player : MonoBehaviour
                             ui.menuOpen = true;
                             return;
                         }
+                        if(hit.collider.tag == "item"){
+                            ui.OpenItemMenu(playerInput.actions["mousePos"].ReadValue<Vector2>(), hit.collider.GetComponent<ItemHolder>().item);
+                            return;
+                        }
                         if(hit.collider.transform.tag == "Player"){
                             ui.OpenPersonalMenu(playerInput.actions["mousePos"].ReadValue<Vector2>());
                             ui.menuOpen = true;
@@ -177,38 +210,48 @@ public class Player : MonoBehaviour
             timeframe = 60;
         }
         hunger -= action.interaction.hunger * (time_between_frames/timeframe);
-        social -= action.interaction.social * (time_between_frames/timeframe);
         sleep -= action.interaction.sleep * (time_between_frames/timeframe);
         hygiene -= action.interaction.hygiene * (time_between_frames/timeframe);
         bathroom -= action.interaction.bathroom * (time_between_frames/timeframe);
-        fun -= action.interaction.fun * (time_between_frames/timeframe);
         
-        fun = fun < 0 ? 0 : fun;
         bathroom = bathroom < 0 ? 0 : bathroom;
         hunger = hunger < 0 ? 0 : hunger;
-        social = social < 0 ? 0 : social;
         sleep = sleep < 0 ? 0 : sleep;
         hygiene = hygiene < 0 ? 0 : hygiene;
 
         // sometimes some needs might increase while performing the action, keep them under 1
-        fun = fun > 1 ? 1 : fun;
         bathroom = bathroom > 1 ? 1 : bathroom;
         hunger = hunger > 1 ? 1 : hunger;
-        social = social > 1 ? 1 : social;
         sleep = sleep > 1 ? 1 : sleep;
         hygiene = hygiene > 1 ? 1 : hygiene;
 
+        if(action.interaction.hunger <= 0 && hunger == 1){
+            CancelInteraction();
+            return true;
+        }
+        if(action.interaction.sleep <= 0 && sleep == 1){
+            CancelInteraction();
+            return true;
+        }
+        if(action.interaction.bathroom <= 0 && bathroom == 1){
+            CancelInteraction();
+            return true;
+        }
+
         if(action.interaction.skillIncrease){
             int changeindex = 0;
+            
             foreach(string skill in action.interaction.skillsToChange){
-                int index = skills.FindIndex(sk => sk.id == skill);
-                if(index != -1){
-                    skills[index].level += action.interaction.skillLevelstoChange[changeindex] * (time_between_frames/timeframe);
-                } else {
-                    skills.Add(new Skill{id = skill, level = 1});
+                if(!skills.ContainsKey(skill)){
+                    skills.Add(skill, 0);
                 }
+                skills[skill] += action.interaction.skillLevelstoChange[changeindex] * Time.deltaTime * WorldProperties.timeWarp;
                 changeindex += 1;
             }
+            ui.ShowSkillBar(skills[action.interaction.skillsToChange[0]]);
+        }
+        if(action.interaction is WorkInteraction){
+            money += (((WorkInteraction)action.interaction).dollarsPerMinute/60) * Time.deltaTime * WorldProperties.timeWarp;
         }
         if(hunger == 0 || sleep == 0 || hygiene == 0 || bathroom == 0){
             CancelInteraction();
@@ -299,7 +342,7 @@ public class Player : MonoBehaviour
         //agent.acceleration = base_acceleration ;
         if(performing != null){
             if(performing.active){
-                if(Vector3.Distance(performing.point.position, transform.position) > 0.2f){
+                if(Vector3.Distance(performing.point.position, transform.position) > 0.05f && performing.interaction is not ItemInteraction){
                     transform.position = Vector3.Lerp(transform.position,performing.point.position, 0.1f);
                     animator.transform.parent.forward = performing.point.forward;
                 } else {

@@ -8,6 +8,7 @@ TagManager:
   - meeple
   - streets
   - furniture
+  - item
   layers:
   - Default
   - TransparentFX
